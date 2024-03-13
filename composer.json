@@ -1,0 +1,27 @@
+{
+    "name": "huangbule/laravel-eloquent-filter",
+    "description": "An Eloquent way to filter Eloquent Models",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "huangbule",
+            "email": "3314308761@qq.com"
+        }
+    ],
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Huangbule\\LaravelEloquentFilter\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Huangbule\\LaravelEloquentFilter\\EloquentFilterProvider"
+            ],
+            "aliases": {
+
+            }
+        }
+    }
+}
