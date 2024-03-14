@@ -65,11 +65,12 @@ trait FilterTrait
      */
     public function scopeFilter($query, $param = [], $arr_filter = [])
     {
-        foreach ($arr_filter as $key => $column) {
-            if (Str::contains($column, ':')) {
-                list($column, $operator) = explode(":", $column);
+        foreach ($arr_filter as $key => $filter) {
+            if (Str::contains($filter, ':')) {
+                list($search_key, $operator) = explode(":", $filter);
             } else {
-                $operator = config('filter.rule.' . $column);
+                $operator = config('filter.rule.' . $filter);
+                $search_key = $filter;
             }
             $operator ??= config('filter.default');
             $arr_operator = explode("|", $operator);
@@ -77,15 +78,16 @@ trait FilterTrait
             $relation = null;
             $filter_command = config('filter.default');
 
+            $search_key = ltrim($search_key, '#');
             foreach ($arr_operator as $command) {
                 if (!$command)
                     throw new InvalidArgumentException($arr_filter[$key] . " format not valid");
 
                 //check rename or not
-                if (isset($this->renamedFilterFields[$column]) && !empty($param[$column])) {
-                    $old_column = $column;
-                    $column = $this->renamedFilterFields[$column];
-                    $param[$column] = $param[$old_column];
+                if (isset($this->renamedFilterFields[$search_key]) && !empty($param[$search_key])) {
+                    $old_search_key = $search_key;
+                    $search_key = $this->renamedFilterFields[$search_key];
+                    $param[$search_key] = $param[$old_search_key];
                 }
 
                 if (Str::startsWith($command, '$')) {
@@ -100,35 +102,34 @@ trait FilterTrait
                     $preprocess_macro = static::$preprocessMacros[$command] ?? null;
                     if ($preprocess_macro) {
                         if (!$preprocess_macro instanceof Ipreprocess)
-                            throw new NotInstanceOfInterfaceException(get_class($preprocess_macro) . " not implements Ipreprocess ");
+                            throw new NotInstanceOfInterfaceException(get_class($preprocess_macro) . " not implements Ipreprocess");
 
                     } else {
                         $process_class = Str::beforeLast(__NAMESPACE__, "Traits") . "Preprocess\\" . Str::studly($command . "Preprocess");
                         if (!class_exists($process_class)) {
                             throw new NotFoundException($process_class . " not found");
                         }
-                        (new $process_class)->handle($column, $param);
+                        (new $process_class)->handle($search_key, $param);
                     }
                 }
             }
 
             if ($filter_command) {
-                $filter = Str::of($filter_command . "Filter")->substr(1)->studly()->__toString();
-                $filter = lcfirst($filter);
-                $macro = static::$filterMacros[$filter] ?? null;
+                $filter_name = lcfirst(Str::of($filter_command . "Filter")->substr(1)->studly()->__toString());
+                $macro = static::$filterMacros[$filter_name] ?? null;
                 if ($macro) {
                     if ($macro instanceof \Closure) {
                         $macro = $macro->bindTo(null, static::class);
-                        $macro($query, $column, $param);
+                        $macro($query, $search_key, $param);
                     }
                 } else {
                     $reflection_trait = new \ReflectionClass(self::class);
-                    $method_exists = $reflection_trait->hasMethod($filter);
+                    $method_exists = $reflection_trait->hasMethod($filter_name);
                     if (!$method_exists)
-                        throw new NotFoundException($filter . " not found");
+                        throw new NotFoundException($filter_name . " not found");
 
-                    if (!empty($param[$column])) {
-                        $callback = $this->createFilterClosure($filter, $column, $param);
+                    if (!empty($param[$search_key])) {
+                        $callback = $this->createFilterClosure($filter_name, $search_key, $param);
                         if ($relation) {
                             $query->whereHas($relation, $callback);
                         } else {
@@ -212,8 +213,7 @@ trait FilterTrait
             $arr = explode(',', $arr);
         }
         if (count($arr) != 2)
-            throw new InvalidArgumentException($column . " ");
-        throw_api_exception($column . " corresponding values must be throughput or comma separated.");
+            throw new InvalidArgumentException($column . " corresponding values must be throughput or comma separated.");
 
         return $qr->where($column, '>=', $arr[0])->where($column, '<', $arr[1]);
     }

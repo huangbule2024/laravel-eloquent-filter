@@ -1,6 +1,6 @@
 {
     "name": "huangbule/laravel-eloquent-filter",
-    "description": "An Eloquent way to filter Eloquent Models",
+    "description": "An easy way to filter Eloquent Models",
     "license": "MIT",
     "authors": [
         {
@@ -18,10 +18,7 @@
         "laravel": {
             "providers": [
                 "Huangbule\\LaravelEloquentFilter\\EloquentFilterProvider"
-            ],
-            "aliases": {
-
-            }
+            ]
         }
     }
 }
