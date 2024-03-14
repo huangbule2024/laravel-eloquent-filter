@@ -12,8 +12,8 @@ class HalfOpenDatePreprocess implements Ipreprocess {
                 $start_at = $param[$column][0];
                 $end_at = date('Y-m-d', strtotime('+1 day', strtotime($param[$column][1])));
             } else {
-                $start_at = $param[$column];
-                $end_at = date('Y-m-d', strtotime('+1 day', strtotime($param[$column])));
+                list($start_at, $end_at) = explode(",", $param[$column]);
+                $end_at = date('Y-m-d', strtotime('+1 day', strtotime($end_at)));
             }
             $param[$column] = [$start_at, $end_at];
         }

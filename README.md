@@ -68,7 +68,7 @@ return [
         'title' => '$like', //可以不写 因为默认是like
         'department_name' => '$like',
         '#department_name' => '#department|$like',
-        'created_at' => '#department|preprocess|$halfOpenFilter' //不分顺序。  属于department表，同时进行预处理函数，最后执行左开右闭处理
+        'created_at' => '#department|HalfOpenDate|$halfOpen' //不分顺序。  属于department表，同时进行预处理函数，最后执行左开右闭处理
     ]
 ];
 
@@ -118,7 +118,7 @@ class OrderModel extends Model
 | `$in`           | whereIn('id', [1, 2, 3]) |
 | `$notIn`        | whereNotIn('id', [1, 2, 3]) |
 | `$between`      | whereBetween('id', [1, 10]) |
-| `$halfOpenFilter`| where('id','>=',1)->where('id','<',10) |                       |
+| `$halfOpen`| where('id','>=',1)->where('id','<',10) |                       |
 
 ### 前置处理器
 
