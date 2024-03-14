@@ -16,32 +16,32 @@ php artisan vendor:publish --tag=filter
 ##设计初衷
 为了简化搜索写一大推`重复代码`,看下平时大家会写的简化代码，安全方面暂时先不考虑
 ```
-        $input = \request()->input(); //模拟接受用户数据
-        OrdersModel::query()->when(!empty($input['title']), function ($q) use($input) {
-            //订单标题，模糊搜索，我想你们不止订单要给表有`title`字段吧，每个model你们都写一遍
-            $q->where('title', 'like', '%' . $input['title'] . '%');
-        })->when(!empty($input['status']), function ($q) use($input) {
-            //模拟in类型，订单状态，如果搜索多个状态你们可能会这么写，可能传数组或者逗号隔开
-            if (!is_array($input['status'])) {
-                $input['status'] = explode(",", $input['status']);
-            }
-            $q->whereIn('status', $input['status']);
-        })->when(!empty($input['created_at']), function ($q) use($input) {
-            //搜索订单创建时间，可能传数组或者逗号隔开
-            if (is_array($input['created_at'])) {
-                $start_at = $input['created_at'][0];
-                $end_at = date('Y-m-d', strtotime('+1 day', strtotime($input['created_at'][1])));
-            } else {
-                $start_at = $input['created_at'];
-                $end_at = date('Y-m-d', strtotime('+1 day', strtotime($input['created_at'])));
-            }
-            return $q->where('created_at', '>=', $start_at)->where('created_at', '<', $end_at);
-        })->get();
+$input = \request()->input(); //模拟接受用户数据
+OrdersModel::query()->when(!empty($input['title']), function ($q) use($input) {
+    //订单标题，模糊搜索，我想你们不止订单要给表有`title`字段吧，每个model你们都写一遍
+    $q->where('title', 'like', '%' . $input['title'] . '%');
+})->when(!empty($input['status']), function ($q) use($input) {
+    //模拟in类型，订单状态，如果搜索多个状态你们可能会这么写，可能传数组或者逗号隔开
+    if (!is_array($input['status'])) {
+        $input['status'] = explode(",", $input['status']);
+    }
+    $q->whereIn('status', $input['status']);
+})->when(!empty($input['created_at']), function ($q) use($input) {
+    //搜索订单创建时间，可能传数组或者逗号隔开
+    if (is_array($input['created_at'])) {
+        $start_at = $input['created_at'][0];
+        $end_at = date('Y-m-d', strtotime('+1 day', strtotime($input['created_at'][1])));
+    } else {
+        $start_at = $input['created_at'];
+        $end_at = date('Y-m-d', strtotime('+1 day', strtotime($input['created_at'])));
+    }
+    return $q->where('created_at', '>=', $start_at)->where('created_at', '<', $end_at);
+})->get();
 ```
 这边只简单列举了一个orderModel, 你们会发现项目中这样代码重复遍地可见，所以需要优化加速开发
 
 ### 设计思路
-1. 参考laravel validate写法，简化语句
+1.  参考laravel validate写法，简化语句
 2.  引入 `操作符` 比如 like、>=、 between 等等， 而且大家可以自己拓展
 3.  引入 `前置处理器` 再最终执行where语句之前，我们可能需要对$input用户传过来的数据做下处理，比如上面的 
     created_at [2024-03-14, 2024-03-20] 其实20号需要加一天，因为created_at 是datetime类型。  而且必须可拓展
