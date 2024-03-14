@@ -3,7 +3,7 @@
 <p align="center"> An easy way to filter Eloquent Models.</p>
 
 
-## Installing
+## 安装
 
 ```shell
 $ composer require huangbule/laravel-eloquent-filter
@@ -13,7 +13,7 @@ $ composer require huangbule/laravel-eloquent-filter
 php artisan vendor:publish --tag=filter 
 ```
 
-##设计初衷
+## 设计初衷
 为了简化搜索写一大推`重复代码`,看下平时大家会写的简化代码，安全方面暂时先不考虑
 ```
 $input = \request()->input(); //模拟接受用户数据
@@ -40,7 +40,7 @@ OrdersModel::query()->when(!empty($input['title']), function ($q) use($input) {
 ```
 这边只简单列举了一个orderModel, 你们会发现项目中这样代码重复遍地可见，所以需要优化加速开发
 
-### 设计思路
+## 设计思路
 1.  参考laravel validate写法，简化语句
 2.  引入 `操作符` 比如 like、>=、 between 等等， 而且大家可以自己拓展
 3.  引入 `前置处理器` 再最终执行where语句之前，我们可能需要对$input用户传过来的数据做下处理，比如上面的 
@@ -57,7 +57,7 @@ OrdersModel::query()->when(!empty($input['title']), function ($q) use($input) {
 8. 如果你既想在配置直接定义title， 又想定义它所属关联关系。 可以在关联关系前面加#title，代码会在$input['#title']
    去掉# 变成 $input['title'] 获取值, demo 见 下面的#department_name
 
-###配置文件
+### 配置文件
 ```
 <?php
 
