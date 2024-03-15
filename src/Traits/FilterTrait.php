@@ -104,6 +104,7 @@ trait FilterTrait
                         if (!$preprocess_macro instanceof Ipreprocess)
                             throw new NotInstanceOfInterfaceException(get_class($preprocess_macro) . " not implements Ipreprocess");
 
+                        $preprocess_macro->handle($search_key, $param);
                     } else {
                         $process_class = Str::beforeLast(__NAMESPACE__, "Traits") . "Preprocess\\" . Str::studly($command . "Preprocess");
                         if (!class_exists($process_class)) {
