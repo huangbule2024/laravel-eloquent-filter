@@ -40,6 +40,25 @@ OrdersModel::query()->when(!empty($input['title']), function ($q) use($input) {
 ```
 这边只简单列举了一个orderModel, 你们会发现项目中这样代码重复遍地可见，所以需要优化加速开发
 
+或者 你可能用scope封装起来，比如：
+```
+public function scopeWxUserId($query, $param)
+{
+    if (! empty($param['wx_user_id'])) {
+        return $query->where('wx_user_id', $param['wx_user_id']);
+    }
+}
+
+public function scopeUserId($query, $param)
+{
+    if (! empty($param['user_id'])) {
+        return $query->where('user_id', $param['user_id']);
+    }
+}
+```
+你看上面都是重复代码，都属于where 中等于情况， 那我们为何不把他们封装起来呢，为什么要重复写呢？
+
+
 ## 设计思路
 1.  参考laravel validate写法，简化语句
 2.  引入 `操作符` 比如 like、>=、 between 等等， 而且大家可以自己拓展
