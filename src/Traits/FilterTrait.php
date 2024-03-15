@@ -128,7 +128,8 @@ trait FilterTrait
                     if (!$method_exists)
                         throw new NotFoundException($filter_name . " not found");
 
-                    if (!empty($param[$search_key])) {
+                    //laravel middleware will convert empty string to null
+                    if (isset($param[$search_key]) && !is_null($param[$search_key])) {
                         $callback = $this->createFilterClosure($filter_name, $search_key, $param);
                         if ($relation) {
                             $query->whereHas($relation, $callback);
