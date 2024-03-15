@@ -115,7 +115,7 @@ class OrderModel extends Model
     {
         public function index(Request $request)
         {
-            return User::filter($request->input(), ['title'])->get();
+            return User::filter($request->input(), ['title','created_at','搜索字段:预处理器|#操作符|@别名'])->get();
         }
     }
 ```
