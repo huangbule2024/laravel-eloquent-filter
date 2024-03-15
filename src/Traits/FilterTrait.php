@@ -18,7 +18,7 @@ use Illuminate\Support\Traits\Macroable;
 trait FilterTrait
 {
 
-    public $renamedFilterFields = [];
+    private $renamedFilterFields = [];
 
 
     /**
@@ -74,6 +74,14 @@ trait FilterTrait
             }
             $operator ??= config('filter.default');
             $arr_operator = explode("|", $operator);
+            //判断是否有@开头，表示是别名
+            foreach ($arr_operator as $k => $command) {
+                if (Str::contains($command, '@')) {
+                    $this->renamedFilterFields[$search_key] = substr($command, 1);
+                    unset($arr_operator[$k]);
+                    break;
+                }
+            }
 
             $relation = null;
             $filter_command = config('filter.default');

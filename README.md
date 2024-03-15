@@ -66,8 +66,9 @@ return [
     'rule' => [ //定义通用字段类型
         'id' => '$eq',
         'title' => '$like', //可以不写 因为默认是like
+        'order_title' => '@title', //@开头是别名，指定表里面字段是title
         'department_name' => '$like',
-        '#department_name' => '#department|$like',
+        '#department_name' => '#department|$like', //department是关联关系
         'created_at' => '#department|HalfOpenDate|$halfOpen' //不分顺序。  属于department表，同时进行预处理函数，最后执行左开右闭处理
     ]
 ];
@@ -83,10 +84,7 @@ use Huangbule\LaravelEloquentFilter\Traits\FilterTrait;
 use Illuminate\Database\Eloquent\Model;
 
 class OrderModel extends Model
-{
-    //把用户传过来的order_title转成数据库里面的title，为了解决别名问题
-    public $renamedFilterFields = ['order_title' => 'title'];
-    
+{    
     use FilterTrait;
 }
 ```
@@ -102,10 +100,16 @@ class OrderModel extends Model
         }
     }
 ```
+### 标识符枚举：
+
+| 标识符        | Description                              |
+|-----------------|------------------------------------------|
+| `@`           | 字段别名   |
+| `#`           | 关联关系标识|
+| `$`           | 操作符标识|
 
 
-
-### 操作符：
+### 操作符枚举：
 
 | Operator        | Description                              |
 |-----------------|------------------------------------------|
@@ -120,7 +124,7 @@ class OrderModel extends Model
 | `$between`      | whereBetween('id', [1, 10]) |
 | `$halfOpen`| where('id','>=',1)->where('id','<',10) |                       |
 
-### 前置处理器
+### 前置处理器枚举
 
 | preprocess        | Description                              |
 |-----------------|------------------------------------------|
