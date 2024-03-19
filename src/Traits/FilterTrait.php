@@ -2,10 +2,12 @@
 
 namespace Huangbule\LaravelEloquentFilter\Traits;
 
+use Huangbule\LaravelEloquentFilter\Contracts\Ifilter;
 use Huangbule\LaravelEloquentFilter\Contracts\Ipreprocess;
 use Huangbule\LaravelEloquentFilter\Exceptions\InvalidArgumentException;
 use Huangbule\LaravelEloquentFilter\Exceptions\NotFoundException;
 use Huangbule\LaravelEloquentFilter\Exceptions\NotInstanceOfInterfaceException;
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Str;
 use Illuminate\Support\Traits\Macroable;
@@ -30,13 +32,6 @@ trait FilterTrait
 
 
     /**
-     * The registered string preprocess macros.
-     *
-     * @var array
-     */
-    protected static $preprocessMacros = [];
-
-    /**
      * Register a custom macro. ref Macroable trait
      *
      * @param string $name
@@ -48,14 +43,6 @@ trait FilterTrait
         static::$filterMacros[$name] = $macro;
     }
 
-    /**
-     * register a new preprocess instance
-     * @param $name
-     * @param $preprocess
-     */
-    public static function macroPreprocess($name, $preprocess) {
-        static::$preprocessMacros[$name] = $preprocess;
-    }
 
     /**
      * Apply filter to the query builder instance
@@ -107,36 +94,28 @@ trait FilterTrait
                         throw new NotFoundException("'" . get_class(new static()) . "' has not found relation : " . $relation);
                     }
                 } else {
-                    $preprocess_macro = static::$preprocessMacros[$command] ?? null;
-                    if ($preprocess_macro) {
-                        if (!$preprocess_macro instanceof Ipreprocess)
-                            throw new NotInstanceOfInterfaceException(get_class($preprocess_macro) . " not implements Ipreprocess");
-
-                        $preprocess_macro->handle($search_key, $param);
+                    $process_class = Str::beforeLast(__NAMESPACE__, "Traits") . "Preprocess\\" . Str::studly($command . "Preprocess");
+                    if (class_exists($process_class)) {
+                        (new $process_class)->handle($search_key, $param);
                     } else {
-                        $process_class = Str::beforeLast(__NAMESPACE__, "Traits") . "Preprocess\\" . Str::studly($command . "Preprocess");
-                        if (!class_exists($process_class)) {
+                        try {
+                            $preprocess = app($command);
+                            if (!$preprocess instanceof Ipreprocess)
+                                throw new NotInstanceOfInterfaceException(get_class($preprocess) . " not implements Ipreprocess");
+
+                            $preprocess->handle($search_key, $param);
+                        } catch (BindingResolutionException $e) {
                             throw new NotFoundException($process_class . " not found");
                         }
-                        (new $process_class)->handle($search_key, $param);
                     }
                 }
             }
 
             if ($filter_command) {
                 $filter_name = lcfirst(Str::of($filter_command . "Filter")->substr(1)->studly()->__toString());
-                $macro = static::$filterMacros[$filter_name] ?? null;
-                if ($macro) {
-                    if ($macro instanceof \Closure) {
-                        $macro = $macro->bindTo(null, static::class);
-                        $macro($query, $search_key, $param);
-                    }
-                } else {
-                    $reflection_trait = new \ReflectionClass(self::class);
-                    $method_exists = $reflection_trait->hasMethod($filter_name);
-                    if (!$method_exists)
-                        throw new NotFoundException($filter_name . " not found");
-
+                $reflection_trait = new \ReflectionClass(self::class);
+                $method_exists = $reflection_trait->hasMethod($filter_name);
+                if ($method_exists) {
                     //laravel middleware will convert empty string to null
                     if (isset($param[$search_key]) && !is_null($param[$search_key])) {
                         $callback = $this->createFilterClosure($filter_name, $search_key, $param);
@@ -145,6 +124,16 @@ trait FilterTrait
                         } else {
                             $callback($query);
                         }
+                    }
+                } else {
+                    try {
+                        $filter_obj = app($filter_name);
+                        if (!$filter_obj instanceof Ifilter) {
+                            throw new NotInstanceOfInterfaceException(get_class($filter_obj) . " not implements Ifilter");
+                        }
+                        $filter_obj->handle($query, $search_key, $param);
+                    } catch (BindingResolutionException $e) {
+                        throw new NotFoundException($filter_name . " not found");
                     }
                 }
             }
