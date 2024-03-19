@@ -164,7 +164,7 @@ class OrderModel extends Model
      
         public function boot(Request $request)
         {
-            FilterTrait::macroPreprocess('uuid', new UuidPreprocess());
+           $this->app->singleton('uuid', UuidPreprocess::class);
         } 
     }
 
@@ -202,12 +202,26 @@ class UuidPreprocess implements Ipreprocess {
      
         public function boot(Request $request)
         {
-            FilterTrait::macroFilter('leftLike', function ($qr, $column, $param) {
-                    
-                return $qr->where($column, 'like', $param[$column] . '%');
-            });
+            $this->app->singleton('leftLike', LeftLike::class);
+            
         } 
     }
+
+```
+自定义过滤器必须实现 `Huangbule\LaravelEloquentFilter\Contracts\Ifilter` 接口
+
+```
+namespace App\Preprocess;
+
+use  Huangbule\LaravelEloquentFilter\Contracts\Ifilter;
+
+class UuidPreprocess implements Ifilter {
+
+    public function handle($qr, $column, $param) {
+        //@todo 业务逻辑
+       
+    }
+}
 
 ```
 
