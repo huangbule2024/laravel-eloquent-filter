@@ -202,7 +202,7 @@ class UuidPreprocess implements Ipreprocess {
      
         public function boot(Request $request)
         {
-            $this->app->singleton('leftLike', LeftLike::class);
+            $this->app->singleton('leftLike', LeftLikeFilter::class);
             
         } 
     }
@@ -215,7 +215,7 @@ namespace App\Preprocess;
 
 use  Huangbule\LaravelEloquentFilter\Contracts\Ifilter;
 
-class UuidPreprocess implements Ifilter {
+class LeftLikeFilter implements Ifilter {
 
     public function handle($qr, $column, $param) {
         //@todo 业务逻辑
