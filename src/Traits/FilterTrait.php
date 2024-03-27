@@ -61,14 +61,6 @@ trait FilterTrait
             }
             $operator ??= config('filter.default');
             $arr_operator = explode("|", $operator);
-            //判断是否有@开头，表示是别名
-            foreach ($arr_operator as $k => $command) {
-                if (Str::contains($command, '@')) {
-                    $this->renamedFilterFields[$search_key] = substr($command, 1);
-                    unset($arr_operator[$k]);
-                    break;
-                }
-            }
 
             $relation = null;
             $filter_command = config('filter.default');
@@ -78,13 +70,6 @@ trait FilterTrait
                 if (!$command)
                     throw new InvalidArgumentException($arr_filter[$key] . " format not valid");
 
-                //check rename or not
-                if (isset($this->renamedFilterFields[$search_key]) && !empty($param[$search_key])) {
-                    $old_search_key = $search_key;
-                    $search_key = $this->renamedFilterFields[$search_key];
-                    $param[$search_key] = $param[$old_search_key];
-                }
-
                 if (Str::startsWith($command, '$')) {
                     $filter_command = $command;
                 } elseif (Str::startsWith($command, '#')) {
@@ -93,6 +78,11 @@ trait FilterTrait
                     if (!method_exists(static::class, $relation)) {
                         throw new NotFoundException("'" . get_class(new static()) . "' has not found relation : " . $relation);
                     }
+                } elseif (Str::startsWith($command, '@')) {  //判断是否有@开头，表示是别名
+                    $old_search_key = $search_key;
+                    $search_key = substr($command, 1);
+                    $param[$search_key] = $param[$old_search_key];
+                    continue;
                 } else {
                     $process_class = Str::beforeLast(__NAMESPACE__, "Traits") . "Preprocess\\" . Str::studly($command . "Preprocess");
                     if (class_exists($process_class)) {
