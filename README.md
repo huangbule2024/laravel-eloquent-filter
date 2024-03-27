@@ -2,6 +2,8 @@
 
 <p align="center"> An easy way to filter Eloquent Models.</p>
 
+## 依赖
+1. PHP7.4+
 
 ## 安装
 
